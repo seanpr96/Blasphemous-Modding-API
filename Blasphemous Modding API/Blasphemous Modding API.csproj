@@ -1,60 +1,62 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <RootNamespace>Modding</RootNamespace>
-    <AssemblyName>Assembly-CSharp.mm</AssemblyName>
-    <TargetFramework>net35</TargetFramework>
-    <AssemblyTitle>Blasphemous Modding API</AssemblyTitle>
-    <Product>Blasphemous Modding API</Product>
-    <Copyright>Copyright ©  2019</Copyright>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <PostBuildEvent>cd $(OutputDir)
+    <PropertyGroup>
+        <RootNamespace>Modding</RootNamespace>
+        <AssemblyName>Assembly-CSharp.mm</AssemblyName>
+        <TargetFramework>net35</TargetFramework>
+        <AssemblyTitle>Blasphemous Modding API</AssemblyTitle>
+        <Product>Blasphemous Modding API</Product>
+        <Copyright>MIT</Copyright>
+        <OutputPath>bin\$(Configuration)\</OutputPath>
+    </PropertyGroup>
 
-MonoMod.RuntimeDetour.HookGen.exe Assembly-CSharp.dll
-MonoMod.exe Assembly-CSharp.dll
+    <UsingTask TaskName="SetEnvTask.SetEnvVar" AssemblyFile="$(SolutionDir)Tasks\SetEnvTask.dll"/>
+    
+    <PropertyGroup>
+        <Mono Condition="$(OS) == WINDOWS_NT"/>
+        <Mono Condition="$(OS) != WINDOWS_NT">mono</Mono>
+    </PropertyGroup>
 
-if not exist "$(ProjectDir)..\Output" (mkdir "$(ProjectDir)..\Output")
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <SetEnvVar Variable="MONOMOD_PREVENTINLINE" Value="1"/>
+        
+        <Delete Condition="Exists('MONOMODDED_Assembly-CSharp.dll')" Files="MONOMODDED_Assembly-CSharp.dll"/>
+        <Exec WorkingDirectory="$(TargetDir)" Command="$(Mono) MonoMod.exe Assembly-CSharp.dll"/>
 
-copy /Y MMHOOK_Assembly-CSharp.dll "$(ProjectDir)..\Output\MMHOOOK.dll"
-copy /Y MONOMODDED_Assembly-CSharp.dll "$(ProjectDir)..\Output\Assembly-CSharp.dll"
-copy /Y ValueTupleBridge.dll "$(ProjectDir)..\Output\"</PostBuildEvent>
-    <PreBuildEvent />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>cd $(OutputDir)
 
-MonoMod.RuntimeDetour.HookGen.exe Assembly-CSharp.dll
-MonoMod.exe Assembly-CSharp.dll
+        <Exec
+                Condition="!Exists('$(TargetDir)MMHOOK_Assembly-CSharp.dll')"
+                WorkingDirectory="$(TargetDir)"
+                Command="$(Mono) MonoMod.RuntimeDetour.HookGen.exe --private Assembly-CSharp.dll"
+        />
+    </Target>
+    
+    <ItemGroup>
+        <Reference Include="Assembly-CSharp">
+            <HintPath>..\Vanilla\Assembly-CSharp.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+            <HintPath>..\Vanilla\UnityEngine.CoreModule.dll</HintPath>
+        </Reference>
+    </ItemGroup>
 
-if not exist "$(ProjectDir)..\Output" (mkdir "$(ProjectDir)..\Output")
-
-copy /Y MMHOOK_Assembly-CSharp.dll "$(ProjectDir)..\Output\MMHOOOK.dll"
-copy /Y MONOMODDED_Assembly-CSharp.dll "$(ProjectDir)..\Output\Assembly-CSharp.dll"
-copy /Y ValueTupleBridge.dll "$(ProjectDir)..\Output\"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent />
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Mono.Cecil" Version="0.10.4" />
-    <PackageReference Include="MonoMod" Version="19.9.1.6" />
-    <PackageReference Include="MonoMod.RuntimeDetour" Version="19.9.1.6" />
-    <PackageReference Include="MonoMod.RuntimeDetour.HookGen" Version="19.9.1.6" />
-    <PackageReference Include="MonoMod.Utils" Version="19.9.1.6" />
-    <PackageReference Include="ValueTupleBridge" Version="0.1.5" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\Vanilla\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\Vanilla\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Mono.Cecil" Version="0.10.4">
+            <IncludeAssets>all</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MonoMod" Version="19.9.1.6">
+            <IncludeAssets>all</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="19.9.1.6">
+            <IncludeAssets>all</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MonoMod.RuntimeDetour.HookGen" Version="19.9.1.6">
+            <IncludeAssets>all</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MonoMod.Utils" Version="19.9.1.6">
+            <IncludeAssets>all</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="ValueTupleBridge" Version="0.1.5">
+            <IncludeAssets>all</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 </Project>
