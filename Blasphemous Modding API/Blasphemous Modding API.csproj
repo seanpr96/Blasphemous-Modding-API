@@ -9,25 +9,30 @@
         <OutputPath>bin\$(Configuration)\</OutputPath>
     </PropertyGroup>
 
-    <UsingTask TaskName="SetEnvTask.SetEnvVar" AssemblyFile="$(SolutionDir)Tasks\SetEnvTask.dll"/>
+    <UsingTask TaskName="SetEnvTask.SetEnvVar" AssemblyFile="$(SolutionDir)Tasks\SetEnvTask.dll" />
     
     <PropertyGroup>
-        <Mono Condition="$(OS) == WINDOWS_NT"/>
+        <Mono Condition="$(OS) == WINDOWS_NT" />
         <Mono Condition="$(OS) != WINDOWS_NT">mono</Mono>
+        
+        <OutputLoc>$(SolutionDir)Output\</OutputLoc>
     </PropertyGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <SetEnvVar Variable="MONOMOD_PREVENTINLINE" Value="1"/>
+        <MakeDir Condition="Exists('$(OutputLoc)')" Directories="$(OutputLoc)" />
+        <Delete Condition="Exists('$(OutputLoc)Assembly-CSharp.dll')" Files="$(OutputLoc)Assembly-CSharp.dll" />
         
-        <Delete Condition="Exists('MONOMODDED_Assembly-CSharp.dll')" Files="MONOMODDED_Assembly-CSharp.dll"/>
-        <Exec WorkingDirectory="$(TargetDir)" Command="$(Mono) MonoMod.exe Assembly-CSharp.dll"/>
+        <SetEnvVar Variable="MONOMOD_PREVENTINLINE" Value="1" />
+        
+        <Delete Condition="Exists('$(TargetDir)MONOMODDED_Assembly-CSharp.dll')" Files="$(TargetDir)MONOMODDED_Assembly-CSharp.dll" />
+        <Exec WorkingDirectory="$(TargetDir)" Command="$(Mono) MonoMod.exe Assembly-CSharp.dll" />
 
 
-        <Exec
-                Condition="!Exists('$(TargetDir)MMHOOK_Assembly-CSharp.dll')"
-                WorkingDirectory="$(TargetDir)"
-                Command="$(Mono) MonoMod.RuntimeDetour.HookGen.exe --private Assembly-CSharp.dll"
-        />
+        <Exec Condition="!Exists('$(TargetDir)MMHOOK_Assembly-CSharp.dll')" WorkingDirectory="$(TargetDir)" Command="$(Mono) MonoMod.RuntimeDetour.HookGen.exe --private Assembly-CSharp.dll" />
+        
+        <Copy SourceFiles="$(TargetDir)MMHook_Assembly-CSharp.dll" DestinationFiles="$(OutputLoc)MMHook_Assembly-CSharp.dll" SkipUnchangedFiles="true" />
+        
+        <Copy SourceFiles="$(TargetDir)MONOMODDED_Assembly-CSharp.dll" DestinationFiles="$(OutputLoc)Assembly-CSharp.dll" />
     </Target>
     
     <ItemGroup>
