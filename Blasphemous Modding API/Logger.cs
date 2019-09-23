@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using Framework.Util;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -60,11 +61,14 @@ namespace Modding
             }
 
             string time = DateTime.Now.ToString("HH:mm:ss");
+            string msgFinal = $"[{time}] [{level.ToString()}] [{_name}] - {message}";
 
             lock (Writer)
             {
-                Writer.WriteLine($"[{time}] [{level.ToString()}] [{_name}] - {message}");
+                Writer.WriteLine(msgFinal);
             }
+
+            Singleton<Console>.Instance.AddText(msgFinal + "\n");
         }
 
         public void LogVerbose(string message) => Log(message, LogLevel.Verbose);
